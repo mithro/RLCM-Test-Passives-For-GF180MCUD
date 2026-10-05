@@ -3,25 +3,27 @@
 RLCM is a test chip of on-chip passives in the open-source
 [GF180MCU](https://gf180mcu-pdk.readthedocs.io/) process, taped out on the
 [wafer.space](https://wafer.space/) GF180MCU Run 2 shuttle. It was designed by
-Ghaith Al Sabagh
+[Ghaith Al Sabagh](https://github.com/EngGhaith)
 ([Institute for Communications Engineering and RF-Systems](https://www.jku.at/en/institute-for-communications-engineering-and-rf-systems/),
 Johannes Kepler University Linz). The project description on wafer.space reads:
 
 > This TO aims to have a kind of test passives to verify the automated openEMS
 > flow used to simulate passives on GF180MCUD.
 
-The die carries two MIM capacitors, two spiral inductors, a symmetric inductor,
-two transformers, and the open, joined and thru structures needed to remove
-the pads and feed lines from a measurement. Every structure has its own
-ground-signal probe launch and nothing on the die needs a supply. Measured
-S-parameters of these structures can be compared one to one with an
-electromagnetic (EM) simulation of the same GDS, which tells you how far the
-simulation setup for this process can be trusted before you rely on it for a
-real RF design.
+The die carries two metal-insulator-metal (MIM) capacitors, two spiral
+inductors, a symmetric inductor with a centre tap, two transformers, and the
+open, joined and thru structures required to de-embed the pads and feed lines
+from a measurement. Each structure is connected to its own
+[probe launch](#probe-launches), a block of pads in which two ground pads
+enclose two or three signal pads, and no structure requires a supply. The
+S-parameters measured on silicon can therefore be compared directly with an
+electromagnetic (EM) simulation of the same GDS geometry in
+[openEMS](https://www.openems.de/). The difference between the two is a
+measure of the accuracy of the simulation setup for this process.
 
 ## Status
 
-Silicon is expected back in November 2026. No measurements exist yet.
+Silicon is expected in November 2026. No measurements exist yet.
 
 | Property | Value |
 |---|---|
@@ -43,20 +45,23 @@ Silicon is expected back in November 2026. No measurements exist yet.
 
 ![Layout of the whole die with the thirteen items numbered](docs/img/die.png)
 
-*The numbers match the [index](#index-of-structures) below. Only the five
-routing metals, the MIM top plate, the pad openings and the EM port markers
-are drawn.*
+*Layout of the die. The numbers are those of the
+[index of structures](#index-of-structures). Only the five routing metals, the
+MIM top plate, the pad openings and the EM port markers are drawn. The red
+block at the right edge beside structure 10 is a stray rectangle on a port
+layer, described under
+[Spiral inductors in `docs/README.md`](docs/README.md#spiral-inductors).*
 
 ![Every pad opening on the die, coloured by its role](docs/img/pad_map.png)
 
-*All 246 pad openings. The small numbers around the edge are the 72 frame
-pads, counted counterclockwise from the lower left. The pad tables are in
-[`docs/README.md`](docs/README.md#pads).*
+*All 246 pad openings, coloured by role. The small numbers around the edge
+are the 72 frame pads, counted counterclockwise from the lower left corner.
+The pad tables are in [`docs/README.md`](docs/README.md#pads).*
 
 ## Index of structures
 
-Size is the bounding box of the layout cell as placed and origin is its
-lower left corner, both in the coordinates of the top cell.
+The size is the bounding box of the layout cell as placed and the origin is
+its lower left corner, both in the coordinates of the top cell.
 
 | # | Structure | Layout cell | Size (µm) | Origin (µm) | Full details |
 |---|---|---|---|---|---|
@@ -88,27 +93,31 @@ lower left corner, both in the coordinates of the top cell.
 [^12]: A two-port launch on its own, with the two signal stubs left open.
 [^13]: Three frame pads on the left edge that connect to nothing.
 
-Where to find things:
+### Repository contents
 
 | Location | Contents |
 |---|---|
 | [`RLCMV4_filled.zip`](RLCMV4_filled.zip) | The submitted layout as one GDS file, with dummy fill and seal ring |
 | [`seperate_GDSs/`](seperate_GDSs/README.md) | Stand-alone GDS files of two of the inductors and of the two pad frames |
 | [`docs/README.md`](docs/README.md) | Full details of every structure in the submitted layout, and the pad tables |
-| [`docs/scripts/expected_values.py`](docs/scripts/expected_values.py) | The hand calculations behind the expected values quoted below |
-| [`docs/updating-images.md`](docs/updating-images.md) | How to regenerate the pictures in this documentation |
+| [`docs/scripts/expected_values.py`](docs/scripts/expected_values.py) | The hand calculations behind the expected values quoted in the sections on each structure type |
+| [`docs/updating-images.md`](docs/updating-images.md) | The procedure for regenerating the pictures in this documentation |
 
 ## Probe launches
 
-Every structure is reached through a probe launch at the die edge. A launch
-repeats the same pads on several rows at different pitches, so one structure
-can be probed with whichever probe is at hand or wire bonded from the frame
-row.
+Every structure is connected to a probe launch at the die edge. In this
+documentation a launch is a block of ground (G) and signal (S) pads in a
+ground-signal-signal-ground (GSSG) or ground-signal-signal-signal-ground
+(GSSSG) arrangement. A launch repeats the same pads on several rows at
+different pitches, so a structure can be measured with wafer probes of more
+than one pitch or wire bonded from the frame row. The two launch types are:
 
 | Launch | Layout cells | Pad order | Used by |
 |---|---|---|---|
 | Two-port | `Probes_2P`, `Probes_2P_DEEMD` | G S1 S2 G | [^1] [^2] [^8] [^10] [^11] [^12] |
 | Three-port | `Probes_3P` | G S1 S2 S3 G | [^3] [^4] [^5] [^6] [^7] [^9] |
+
+The rows of each launch, counted from the die edge inwards, are:
 
 | Row | Pitch (µm) | Pads in a two-port launch | Pads in a three-port launch |
 |---|---|---|---|
@@ -119,35 +128,53 @@ row.
 
 ![Pad rows of a two-port launch](docs/img/launch_2port.png)
 
+*Pad rows of a two-port launch on the top or bottom edge. On the left and
+right edges the frame row has a pitch of 152 µm.*
+
 ![Pad rows of a three-port launch](docs/img/launch_3port.png)
+
+*Pad rows of a three-port launch. The third row has no S2 pad.*
 
 All pad openings are 60 µm × 60 µm. The names G, S1, S2 and S3 are used
 only in this documentation, because the layout has no pin labels. S1 is the
-signal pad with the lowest x or y coordinate. Full details and the pad tables:
-[`docs/README.md`](docs/README.md#probe-launches).
+signal pad with the lowest x or y coordinate. The launch cells, the ground
+connections and the pad tables are described under
+[Probe launches in `docs/README.md`](docs/README.md#probe-launches).
 
 ## MIM capacitors
 
 ![The two MIM capacitors on their launches](docs/img/mim_capacitors.png)
 
-Two metal-insulator-metal capacitors between Metal4 (bottom plate) and
-Metal5 (top plate, through the MIM top plate layer). Each is a series
-element: S1 goes to the bottom plate and S2 to the top plate.
+The die carries two MIM capacitors between Metal4 (bottom plate) and Metal5
+(top plate, through the MIM top plate layer). Each capacitor is a series
+element between the two signal pads: S1 connects to the bottom plate and S2
+to the top plate.
 
 | # | Top plate (µm) | Area (µm²) | Expected capacitance |
 |---|---|---|---|
 | [^1] | 100&nbsp;×&nbsp;100 | 10000 | 20 pF (18 pF to 22 pF) |
 | [^2] | 54&nbsp;×&nbsp;25 | 1350 | 2.7 pF (2.43 pF to 2.97 pF) |
 
-| Step | How |
-|---|---|
-| Probing | Two-port launches on the bottom edge, G S1 S2 G. |
-| Measuring | Two-port S-parameters, then remove the launch using the open and joined launches [^12] and [^11], which use the same launch cell. Convert to Y-parameters. The series capacitance is `-Im(Y21) / (2πf)` well below self-resonance. |
-| Expected value | Area times the 2.0 fF/µm² (1.8 to 2.2) that the [PDK lists](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/spice/elec_specs/elec_specs_6_4.html) for its densest MIM option, which is the value the `gf180mcuD` tooling assumes. No EM simulation result is recorded in this repository. |
+The full description is under
+[MIM capacitors in `docs/README.md`](docs/README.md#mim-capacitors).
 
-Full details: [`docs/README.md`](docs/README.md#mim-capacitors).
+### Measurement
 
-Further reading:
+The capacitors are probed on two-port launches on the bottom edge, with the
+pad order G S1 S2 G. The two-port S-parameters are measured and the launch is
+removed using the open and joined launches [^12] and [^11], which use the
+same launch cell. After conversion to Y-parameters, the series capacitance
+well below self-resonance is `-Im(Y21) / (2πf)`.
+
+### Expected values
+
+The expected capacitance is the top plate area multiplied by the capacitance
+per unit area of 2.0 fF/µm² (1.8 fF/µm² to 2.2 fF/µm²) that the
+[PDK lists](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/spice/elec_specs/elec_specs_6_4.html)
+for its densest MIM option, which is the value the `gf180mcuD` tooling
+assumes. No EM simulation result is recorded in this repository.
+
+### Further reading
 
 1. G. Al Sabagh, [EM stack files for GF180MCUD](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/tree/main/EM-Flow), with notes on how the MIM layers must be prepared for simulation.
 2. GF180MCU PDK documentation, [MIM capacitor electrical specification](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/spice/elec_specs/elec_specs_6_4.html) and [MIM option B layout rules](https://gf180mcu-pdk.readthedocs.io/en/latest/physical_verification/design_manual/drm_10_4_2.html).
@@ -158,27 +185,43 @@ Further reading:
 |---|---|
 | ![Two-turn spiral inductor](docs/img/spiral_2turn.png) | ![Four-turn spiral inductor](docs/img/spiral_4turn.png) |
 
-Two square spirals with the same 250 µm outline, 26 µm track and 2 µm
-spacing. All five metals are stacked and tied together with via arrays along
-the winding. The inner end comes back out underneath the turns on Metal1 and
-Metal2.
+The two inductors are square spirals with the same 250 µm outer dimension,
+26 µm track width and 2 µm spacing. All five metals are stacked and
+connected by via arrays along the winding. The inner end is brought out
+through an underpass on Metal1 and Metal2 beneath the turns.
 
 | # | Turns | Inner opening (µm) | Expected inductance | Expected DC resistance |
 |---|---|---|---|---|
 | [^10] | 2 | 142 | 1.3 nH | 0.8 Ω |
 | [^8] | 4 | 30 | 2.1 nH | 1.2 Ω |
 
-| Step | How |
-|---|---|
-| Probing | Two-port launches on the right edge, G S1 S2 G. S1 is the inner end of the spiral and S2 the outer end. |
-| Measuring | Two-port S-parameters, de-embed, convert to Y-parameters. The usual figures are `L = Im(1/Y11) / (2πf)` and `Q = Im(1/Y11) / Re(1/Y11)` with port 2 grounded, or the same from `-1/Y21` for the series branch. |
-| Expected values | The inductance is from the current sheet expression of Mohan et al. and the resistance from the PDK sheet resistances. Both are hand calculations that ignore the substrate, the ground ring and the underpass. Quality factor and self-resonance need the EM simulation, and no simulation result is recorded in this repository. |
-
-Full details: [`docs/README.md`](docs/README.md#spiral-inductors). The
-two-turn spiral is also available on its own in
+The full description is under
+[Spiral inductors in `docs/README.md`](docs/README.md#spiral-inductors). The
+two-turn spiral is also available as a stand-alone file in
 [`seperate_GDSs/`](seperate_GDSs/README.md#spiral-inductor).
 
-Further reading:
+### Measurement
+
+The inductors are probed on two-port launches on the right edge, with the pad
+order G S1 S2 G. S1 is the inner end of the spiral and S2 the outer end. The
+two-port S-parameters are measured, de-embedded and converted to
+Y-parameters. With port 2 grounded, the inductance and quality factor are
+`L = Im(1/Y11) / (2πf)` and `Q = Im(1/Y11) / Re(1/Y11)`. The same expressions
+applied to `-1/Y21` give the values for the series branch.
+
+### Expected values
+
+The inductance is calculated from the current sheet expression of
+[Mohan et al.](https://doi.org/10.1109/4.792620) and the DC resistance from
+the
+[PDK sheet resistances](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/layout/inter_specs/inter_specs_4.html).
+Both are hand calculations that ignore the substrate, the ground ring and the
+underpass. They are derived under
+[Expected values in `docs/README.md`](docs/README.md#expected-values). The
+quality factor and the self-resonant frequency can only be obtained from an
+EM simulation, and no simulation result is recorded in this repository.
+
+### Further reading
 
 1. V. Mühlhaus, [gds2openEMS](https://github.com/VolkerMuehlhaus/gds2openEMS), the GDS to openEMS workflow, with inductor examples.
 2. S. S. Mohan, M. del Mar Hershenson, S. P. Boyd and T. H. Lee, "Simple accurate expressions for planar spiral inductances", IEEE J. Solid-State Circuits, vol. 34, no. 10, pp. 1419-1424, 1999. [doi:10.1109/4.792620](https://doi.org/10.1109/4.792620)
@@ -189,22 +232,34 @@ Further reading:
 
 ![Symmetric inductor with centre tap](docs/img/symmetric_inductor.png)
 
-A square two-turn differential inductor [^9] with the same 250 µm outline,
-26 µm track and 2 µm spacing as the spirals. The two turns swap places at
-one crossover, where one path stays on Metal3 to Metal5 and the other drops to
-Metal1 and Metal2. The centre tap is brought out between the two ends.
+Structure [^9] is a square, two-turn symmetric (differential) inductor with
+the same 250 µm outer dimension, 26 µm track width and 2 µm spacing as the
+spiral inductors. The two turns exchange position at one crossover, where one
+path remains on Metal3 to Metal5 and the other drops to Metal1 and Metal2.
+The centre tap is brought out between the two ends.
 
-| Step | How |
-|---|---|
-| Probing | Three-port launch on the left edge, G S1 S2 S3 G. S1 and S3 are the two ends and S2 is the centre tap. |
-| Measuring | Three-port S-parameters, or a two-port measurement on S1 and S3 using the third pad row, which has no S2 pad. The differential inductance is `Im(Zdiff) / (2πf)` with `Zdiff = Z11 + Z22 - Z12 - Z21` between the two ends. Remove the launch using [^6] and [^7]. |
-| Expected value | About 1.3 nH end to end from the same hand calculation as the two-turn spiral, which does not model the crossover or the centre tap. No EM simulation result is recorded in this repository. |
-
-Full details: [`docs/README.md`](docs/README.md#symmetric-inductor). The
-inductor is also available on its own in
+The full description is under
+[Symmetric inductor in `docs/README.md`](docs/README.md#symmetric-inductor).
+The inductor is also available as a stand-alone file in
 [`seperate_GDSs/`](seperate_GDSs/README.md#symmetric-inductor).
 
-Further reading:
+### Measurement
+
+The inductor is probed on a three-port launch on the left edge, with the pad
+order G S1 S2 S3 G. S1 and S3 are the two ends of the winding and S2 is the
+centre tap. Either the three-port S-parameters are measured, or a two-port
+measurement is made on S1 and S3 using the third pad row, which has no S2
+pad. The differential inductance is `Im(Zdiff) / (2πf)` with
+`Zdiff = Z11 + Z22 - Z12 - Z21` between the two ends. The launch is removed
+using [^6] and [^7].
+
+### Expected values
+
+The expected inductance is about 1.3 nH end to end, from the same hand
+calculation as for the two-turn spiral, which does not model the crossover or
+the centre tap. No EM simulation result is recorded in this repository.
+
+### Further reading
 
 1. V. Mühlhaus, [gds2openEMS](https://github.com/VolkerMuehlhaus/gds2openEMS), the GDS to openEMS workflow.
 2. J. R. Long and M. A. Copeland, "The modeling, characterization, and design of monolithic inductors for silicon RF IC's", IEEE J. Solid-State Circuits, vol. 32, no. 3, pp. 357-369, 1997. [doi:10.1109/4.557634](https://doi.org/10.1109/4.557634)
@@ -215,26 +270,46 @@ Further reading:
 |---|---|
 | ![Transformer with one turn per winding](docs/img/transformer_1turn.png) | ![Transformer with two turns per winding](docs/img/transformer_2turn.png) |
 
-Two transformers, each made of two interleaved windings with crossovers. Both
-sit in the middle of the die between a three-port launch on the left and one
-on the right, joined by three Metal5 feed lines on each side.
+Each of the two transformers consists of two interleaved windings with
+crossovers. Both are placed in the middle of the die between a three-port
+launch on the left edge and one on the right edge, and are connected to each
+launch by three Metal5 feed lines.
 
 ![Transformer 3 between its two launches](docs/img/transformer_row.png)
+
+*Transformer 3 with its feed lines, ground rails and launches.*
+
+The windings are named A and B in this documentation. Their terminals are
+assigned to the launch pads as follows:
 
 | # | Rings | Track (µm) | Left launch | Right launch |
 |---|---|---|---|---|
 | [^3] | 2 | 26 | S1 and S3: ends of winding A. S2: centre tap of winding B | S1 and S3: ends of winding B. S2: centre tap of winding A |
 | [^5] | 4 | 24 | S1 and S3: ends of winding A. S2: centre tap of winding A | S1 and S3: ends of winding B. S2: centre tap of winding B |
 
-| Step | How |
-|---|---|
-| Probing | Three-port launches on the left and right edges, six signal pads in total. |
-| Measuring | A full characterisation is a six-port measurement. With a four-port analyser, measure the four winding ends on the third pad row of each launch, which has no S2 pad, and leave the centre taps open. Remove the launches and feed lines using [^4], [^6] and [^7]. Winding inductances come from `Im(Z)` of each winding, and the coupling factor from `k = Im(Z21) / sqrt(Im(Z11) Im(Z22))` with each winding treated as one differential port. |
-| Expected values | Not yet recorded. No closed-form estimate is given here because none of the simple expressions covers interleaved windings. This is the structure where the EM simulation matters most. |
+The full description is under
+[Transformers in `docs/README.md`](docs/README.md#transformers).
 
-Full details: [`docs/README.md`](docs/README.md#transformers).
+### Measurement
 
-Further reading:
+Each transformer is probed on three-port launches on the left and right
+edges, with six signal pads in total. A full characterisation is a six-port
+measurement. With a four-port network analyser, the four winding ends are
+measured on the third pad row of each launch, which has no S2 pad, and the
+centre taps are left open. The launches and feed lines are removed using
+[^4], [^6] and [^7]. The winding inductances are obtained from `Im(Z)` of
+each winding, and the coupling factor from
+`k = Im(Z21) / sqrt(Im(Z11) Im(Z22))` with each winding treated as one
+differential port.
+
+### Expected values
+
+No expected values are recorded. No hand estimate is given because the
+closed-form expression used for the spiral inductors does not cover
+interleaved windings. The winding inductances, the coupling factor and the
+self-resonant frequency can only be obtained from an EM simulation.
+
+### Further reading
 
 1. V. Mühlhaus, [gds2palace](https://github.com/VolkerMuehlhaus/gds2palace_ihp_sg13g2), the GDS to Palace workflow, with multi-port examples.
 2. J. R. Long, "Monolithic transformers for silicon RF IC design", IEEE J. Solid-State Circuits, vol. 35, no. 9, pp. 1368-1382, 2000. [doi:10.1109/4.868049](https://doi.org/10.1109/4.868049)
@@ -242,38 +317,55 @@ Further reading:
 
 ## De-embedding structures
 
-A measurement of any structure above includes its pads and feed lines. These
-five structures are the launches on their own, so that their contribution can
-be measured and removed.
+A measurement of any of the passives includes the pads and feed lines of its
+launch. The five de-embedding structures are launches without a device, so
+that the contribution of the launch can be measured and removed.
 
-| # | Launch | Signal pads | Picture |
-|---|---|---|---|
-| [^11] | Two-port | S1 joined to S2 | below, left |
-| [^12] | Two-port | open | below, right |
-| [^6] | Three-port | S1, S2 and S3 joined | second picture, left |
-| [^7] | Three-port | open | second picture, right |
-| [^4] | Three-port, both sides | S1 to S1, S2 to S2 and S3 to S3 through 990 µm lines | third picture |
+| # | Launch | Signal pads |
+|---|---|---|
+| [^11] | Two-port | S1 joined to S2 |
+| [^12] | Two-port | open |
+| [^6] | Three-port | S1, S2 and S3 joined |
+| [^7] | Three-port | open |
+| [^4] | Three-port, both sides | S1 to S1, S2 to S2 and S3 to S3 through 990 µm lines |
 
 ![Two-port launches with the signals joined and open](docs/img/open_short_2port.png)
 
+*Two-port launches on the top edge: structure 11 (left, signals joined) and
+structure 12 (right, signals open).*
+
 ![Three-port launches with the signals joined and open](docs/img/open_short_3port.png)
+
+*Three-port launches: structure 6 (left edge, signals joined) and structure 7
+(right edge, signals open).*
 
 ![Three-line thru between two three-port launches](docs/img/thru_3port.png)
 
-| Step | How |
-|---|---|
-| Probing | Exactly as the structure being de-embedded. |
-| Measuring | Measure these with the same calibration and probe placement as the device, then apply an open-short or thru-based method from the reading list. |
-| Expected results | The open launches should look like a small shunt capacitance and the joined launches like a small series inductance and resistance between the signal pads. No values are recorded in this repository. |
+*Structure 4, the three-line thru between two three-port launches.*
 
 In [^6] and [^11] the signal pads are joined to each other. The connectivity
-extracted from the layout does not show them tied to the ground pads, so they
-are not a short to ground in the sense of the classic open-short method. The
+extracted from the layout does not show them connected to the ground pads, so
+these structures are not a short to ground in the sense of the open-short
+method of [Koolen et al.](https://doi.org/10.1109/BIPOL.1991.160985) The
 intended de-embedding procedure is not recorded in this repository.
 
-Full details: [`docs/README.md`](docs/README.md#de-embedding-structures).
+The full description is under
+[De-embedding structures in `docs/README.md`](docs/README.md#de-embedding-structures).
 
-Further reading:
+### Measurement
+
+Each de-embedding structure is probed in the same way as the device that it
+de-embeds, with the same calibration and probe placement. The launch is then
+removed with an open-short or thru-based method from the
+[further reading](#further-reading-4) of this section.
+
+### Expected values
+
+The open launches are expected to present a small shunt capacitance, and the
+joined launches a small series inductance and resistance between the signal
+pads. No values are recorded in this repository.
+
+### Further reading
 
 1. M. C. A. M. Koolen, J. A. M. Geelen and M. P. J. G. Versleijen, "An improved de-embedding technique for on-wafer high-frequency characterization", Proc. Bipolar Circuits and Technology Meeting, pp. 188-191, 1991. [doi:10.1109/BIPOL.1991.160985](https://doi.org/10.1109/BIPOL.1991.160985)
 2. H. Cho and D. E. Burk, "A three-step method for the de-embedding of high-frequency S-parameter measurements", IEEE Trans. Electron Devices, vol. 38, no. 6, pp. 1371-1375, 1991. [doi:10.1109/16.81628](https://doi.org/10.1109/16.81628)
@@ -283,41 +375,44 @@ Further reading:
 
 ## Simulating the structures
 
-The chip exists to check an openEMS simulation flow against silicon. This
-repository holds only layout. It has no simulation scripts, no stack file and
-no simulated results, and it does not name the flow. The pieces published
-elsewhere are:
+The stated purpose of the chip is to verify an openEMS simulation flow
+against silicon. This repository holds only layout. It contains no simulation
+scripts, no stack file and no simulated results, and it does not name the
+flow. The following components are published elsewhere:
 
-| Piece | Where |
+| Component | Location |
 |---|---|
 | GDS to openEMS workflow | [VolkerMuehlhaus/gds2openEMS](https://github.com/VolkerMuehlhaus/gds2openEMS) |
 | GDS to Palace workflow | [VolkerMuehlhaus/gds2palace_ihp_sg13g2](https://github.com/VolkerMuehlhaus/gds2palace_ihp_sg13g2) |
 | GF180MCUD stack files for both, by the author of this chip | [`EM-Flow/` in EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/tree/main/EM-Flow) |
 | Stack viewer | [VolkerMuehlhaus/setupEM](https://github.com/VolkerMuehlhaus/setupEM) |
 
-Those workflows take a GDS file, an XML description of the metal and
-dielectric stack, and a short Python model script. Ports are drawn in the GDS
-as polygons on extra layers, by convention 201 and above, and the model script
-maps each layer to a port number. The inductor and transformer cells on this
-chip already carry such polygons on layers 201 to 207. They are the red marks
-in the pictures and are listed per cell in
-[`docs/README.md`](docs/README.md#em-port-markers).
+These workflows take a GDS file, an XML description of the metal and
+dielectric stack, and a Python model script. Ports are drawn in the GDS as
+polygons on additional layers, by convention 201 and above, and the model
+script maps each layer to a port number. The inductor and transformer cells
+on this chip carry such polygons on layers 201 to 207. They are the red marks
+in the pictures and are listed per cell under
+[EM port markers in `docs/README.md`](docs/README.md#em-port-markers).
+
+### Procedure
 
 To produce the expected S-parameters for one structure:
 
-1. Unzip [`RLCMV4_filled.zip`](RLCMV4_filled.zip) and cut out the cell you
-   want, or start from a file in [`seperate_GDSs/`](seperate_GDSs/README.md).
+1. Unzip [`RLCMV4_filled.zip`](RLCMV4_filled.zip) and extract the required
+   cell, or start from a file in [`seperate_GDSs/`](seperate_GDSs/README.md).
 2. Take [`OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml`](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/main/EM-Flow/OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml)
    and read the [README next to it](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/main/EM-Flow/README.md),
    in particular the note on MIM vias.
 3. Write a gds2openEMS model script that maps the port layers to ports,
-   following the gds2openEMS user guide.
-4. Run it and compare the resulting Touchstone file with the de-embedded
-   measurement.
+   following the
+   [gds2openEMS user guide](https://github.com/VolkerMuehlhaus/gds2openEMS/blob/main/doc/userguide_md_format/Using_OpenEMS_Python_with_IHP_SG13G2_v3.md).
+4. Run the script and compare the resulting Touchstone file with the
+   de-embedded measurement.
 
-Steps 3 and 4 have not been done as part of this documentation.
+Steps 3 and 4 have not been carried out as part of this documentation.
 
-Further reading:
+### Further reading
 
 1. G. Al Sabagh, "The Design Journey of mWATTBAT: The Open-Source Radar Chip", master's thesis, Johannes Kepler University Linz, 2026, which has a section on transmission lines in openEMS. [PDF](https://epub.jku.at/download/pdf/13546624.pdf)
 2. V. Mühlhaus, "User friendly workflow for RFIC EM simulation using openEMS", talk at the Free Silicon Conference, 2025. [Programme](https://wiki.f-si.org/FSiC2025)
@@ -327,13 +422,14 @@ Further reading:
 ## License
 
 The wafer.space project page lists this design under the CERN Open Hardware
-Licence Version 2, Permissive (`CERN-OHL-P-2.0`). The full text is in
-[`LICENSE`](LICENSE).
+Licence Version 2, Permissive
+([`CERN-OHL-P-2.0`](https://spdx.org/licenses/CERN-OHL-P-2.0.html)). The full
+text is in [`LICENSE`](LICENSE).
 
 ## Citing this work
 
-No paper describes this chip yet. Until one does, cite the repository and the
-shuttle:
+No publication describes this chip yet. Until one does, the repository and
+the shuttle can be cited as follows:
 
 ```bibtex
 @misc{alsabagh2026rlcm,
@@ -345,7 +441,7 @@ shuttle:
 }
 ```
 
-Related work by the same author:
+### Related work by the same author
 
 - G. Al Sabagh, G. Zachl and H. Pretl, "A 150-GHz 9-dBm EIRP Open-Source FMCW
   Radar Chip in 130-nm BiCMOS", Austrochip Workshop on Microelectronics,
@@ -354,13 +450,15 @@ Related work by the same author:
 
 ## Acknowledgements
 
-The credits are written on the die itself, in Metal5 above transformer [^5]:
+The credits are written on the die in Metal5, above transformer [^5]:
 
 > DESIGNED BY GHAITH AL SABAGH, NTHFS JKU, MWTH CD LAB
 >
 > THANK U MIM, THANK U SHO, THANK U VOLKER MUEHLHAUS, THANK U LEO MOSER
 
-| Name on the die | Who or what |
+The names on the die refer to:
+
+| Name on the die | Refers to |
 |---|---|
 | NTHFS JKU | [Institute for Communications Engineering and RF-Systems](https://www.jku.at/en/institute-for-communications-engineering-and-rf-systems/), Johannes Kepler University Linz |
 | MWTH CD LAB | [Christian Doppler Laboratory for Distributed Microwave and Terahertz Systems for Sensors and Data Links](https://www.jku.at/en/news-events/news/detail/news/neues-cd-labor-an-der-jku-hochfrequenzsysteme-fuer-moderne-elektronik/) |
