@@ -1,14 +1,15 @@
 # The submitted layout in detail
 
-This page describes everything in [`RLCMV4_filled.zip`](../RLCMV4_filled.zip),
-the layout submitted to wafer.space, grouped by structure. For a short
-overview start at the [top-level&nbsp;README](../README.md). All dimensions were
-read from the GDS file. Coordinates are in µm in the top cell, with the origin
-at the lower left corner of the die.
+This page describes the contents of
+[`RLCMV4_filled.zip`](../RLCMV4_filled.zip), the layout submitted to
+[wafer.space](https://wafer.space/), grouped by structure. An overview is
+given in the [top-level&nbsp;README](../README.md). All dimensions were read
+from the GDS file. Coordinates are in µm in the top cell, with the origin at
+the lower left corner of the die.
 
 ## Contents
 
-1. [The file](#the-file)
+1. [Layout file](#layout-file)
 2. [Structures](#structures)
 3. [Probe launches](#probe-launches)
 4. [MIM capacitors](#mim-capacitors)
@@ -18,11 +19,11 @@ at the lower left corner of the die.
 8. [De-embedding structures](#de-embedding-structures)
 9. [EM port markers](#em-port-markers)
 10. [Pads](#pads)
-11. [Everything else on the die](#everything-else-on-the-die)
+11. [Other features on the die](#other-features-on-the-die)
 12. [Expected values](#expected-values)
-13. [What is not known](#what-is-not-known)
+13. [Open questions](#open-questions)
 
-## The file
+## Layout file
 
 | Property | Value |
 |---|---|
@@ -32,10 +33,12 @@ at the lower left corner of the die.
 | Bounding box | 1936&nbsp;µm&nbsp;×&nbsp;5122&nbsp;µm |
 | Database unit | 1 nm |
 | Cells | 1011 |
-| Second top-level cell | `$$$CONTEXT_INFO$$$`, the parameter record that KLayout writes for its parametric cells. It holds no geometry of its own |
+| Second top-level cell | `$$$CONTEXT_INFO$$$`, the parameter record that [KLayout](https://www.klayout.de/) writes for its parametric cells. It holds no geometry of its own |
 
-GDS layers used outside the dummy fill and seal ring, with the names from the
-GF180MCU layer table:
+### GDS layers
+
+The following GDS layers are used outside the dummy fill and seal ring. The
+names are those of the GF180MCU layer table.
 
 | GDS layer | Name | Use on this chip |
 |---|---|---|
@@ -49,22 +52,28 @@ GF180MCU layer table:
 | 201/0 to 207/0 | not in the layer table | [EM port markers](#em-port-markers) |
 | 0/0, 111/5, 152/5 | PR boundary, NDMY, PMNDMY | Die outline and markers of the wafer.space ID cells |
 
+### Metal stack
+
 The `gf180mcuD` variant of the PDK has five metal layers, with Metal5 made as
 the thick top metal, and the MIM capacitor between Metal4 and Metal5
 ([variant definition in open_pdks](https://github.com/RTimothyEdwards/open_pdks/blob/master/gf180mcu/Makefile.in),
 [metal level options](https://gf180mcu-pdk.readthedocs.io/en/latest/physical_verification/design_manual/drm_02.html)).
-The typical values the PDK documentation gives for that stack are:
+The
+[PDK sheet resistance table](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/layout/inter_specs/inter_specs_4.html)
+gives the following values for that stack:
 
 | Layer | Sheet resistance (Ω/sq) |
 |---|---|
 | Metal1 to Metal4 | 0.090 ± 0.014 |
 | Metal5 as 11 kÅ top metal | 0.04 ± 0.009 |
 
-Source: [PDK sheet resistance table](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/layout/inter_specs/inter_specs_4.html).
-
 ## Structures
 
 ![Layout of the whole die with the thirteen items numbered](img/die.png)
+
+The size is the bounding box of the layout cell as placed and the origin is
+its lower left corner. The rotation is that of the cell instance in the top
+cell.
 
 | # | Structure | Layout cell | Size (µm) | Origin (µm) | Rotation |
 |---|---|---|---|---|---|
@@ -98,11 +107,11 @@ Source: [PDK sheet resistance table](https://gf180mcu-pdk.readthedocs.io/en/late
 
 ## Probe launches
 
-A launch is a block of pads at the die edge. Its first row is made of the
-bond pads of the wafer.space frame. The launch cell adds two or three more
-rows further in, at smaller pitches, wired to the same nets. A structure can
-therefore be reached by wire bonds on the frame row or by a wafer probe on
-any row.
+A launch is a block of pads at the die edge. Its first row consists of bond
+pads of the wafer.space frame. The launch cell adds two or three further rows
+towards the centre of the die, at smaller pitches and connected to the same
+nets. A structure can therefore be contacted by wire bonds on the frame row
+or by a wafer probe on any row. The two launch types compare as follows:
 
 | Property | Two-port launch | Three-port launch |
 |---|---|---|
@@ -120,7 +129,13 @@ Metal3 and Metal4. `Probes_2P` is used for the two spiral inductors and
 
 ![Pad rows of a two-port launch](img/launch_2port.png)
 
+*Pad rows of a two-port launch on the top or bottom edge.*
+
 ![Pad rows of a three-port launch](img/launch_3port.png)
+
+*Pad rows of a three-port launch.*
+
+The rows of each launch, counted from the die edge inwards, are:
 
 | Row | Distance of the pad centre from the die edge (µm) | Pitch, two-port (µm) | Pitch, three-port (µm) |
 |---|---|---|---|
@@ -129,12 +144,13 @@ Metal3 and Metal4. `Probes_2P` is used for the two spiral inductors and
 | 3 | 278 | 100 | 125, four pads: G S1 S3 G |
 | 4 | 388 | none | 100 |
 
-Every pad opening is 60 µm × 60 µm. The pad names are this documentation's.
-The layout carries no pin labels for them. S1 is the signal pad with the
+Every pad opening is 60 µm × 60 µm. The pad names G, S1, S2 and S3 are
+defined by this documentation, because the layout carries no pin labels. S1
+is the signal pad with the
 lowest x coordinate on the top and bottom edges and the lowest y coordinate on
 the left and right edges.
 
-### Ground
+### Ground connections
 
 | Item | Description |
 |---|---|
@@ -174,8 +190,8 @@ Each capacitor is a series element between S1 and S2. Neither plate is tied to
 ground. The stub from S1 reaches the bottom plate through a 26 µm × 10 µm
 Metal4 tab, and the stub from S2 runs on Metal5 onto the top plate.
 
-Matching de-embedding structures: [^11] and [^12], which use the same launch
-cell.
+The matching [de-embedding structures](#de-embedding-structures) are [^11]
+and [^12], which use the same launch cell.
 
 ## Spiral inductors
 
@@ -184,6 +200,9 @@ cell.
 | ![Two-turn spiral inductor](img/spiral_2turn.png) | ![Four-turn spiral inductor](img/spiral_4turn.png) |
 
 ![The inductors on their launches](img/inductor_rows.png)
+
+*The two spiral inductors (right) and the symmetric inductor (left) on their
+launches.*
 
 | Property | [^10] | [^8] |
 |---|---|---|
@@ -213,12 +232,13 @@ The turn counts are read from the layout and, for [^10], from the `N2` in the
 name of its stand-alone file. The spirals do not end exactly where they start,
 so the electrical turn count is close to but not exactly a whole number.
 
-A stray rectangle on port layer 201, 65.3 µm × 84 µm, lies between frame pads
-34 and 35 in the top cell, with its lower left corner at 1844.7,&nbsp;4343. It is the red block at the
-right edge of the pictures and is not part of any cell.
+A stray rectangle on port layer 201, 65.3 µm × 84 µm, lies between frame
+pads 34 and 35 in the top cell, with its lower left corner at
+1844.7,&nbsp;4343. It is the red block at the right edge of the pictures and
+is not part of any cell.
 
-No de-embedding structure uses the `Probes_2P` cell. The two-port
-de-embedding launches [^11] and [^12] use `Probes_2P_DEEMD`, which has the
+No [de-embedding structure](#de-embedding-structures) uses the `Probes_2P`
+cell. The two-port de-embedding launches [^11] and [^12] use `Probes_2P_DEEMD`, which has the
 same pads.
 
 ## Symmetric inductor
@@ -247,9 +267,11 @@ same pads.
 
 The cell is placed rotated by 270°, so its terminals face the launch on the
 left. The winding is a DC short between all three pads, so a continuity check
-between S1, S2 and S3 should read about an ohm on a good die.
+between S1, S2 and S3 is expected to read about 1 Ω on a functional die (see
+[DC resistance](#dc-resistance)).
 
-Matching de-embedding structures: [^6] and [^7].
+The matching [de-embedding structures](#de-embedding-structures) are [^6] and
+[^7].
 
 ## Transformers
 
@@ -258,6 +280,10 @@ Matching de-embedding structures: [^6] and [^7].
 | ![Transformer with one turn per winding](img/transformer_1turn.png) | ![Transformer with two turns per winding](img/transformer_2turn.png) |
 
 ![Transformer 3 between its two launches](img/transformer_row.png)
+
+*Transformer 3 with its feed lines, ground rails and launches.*
+
+The two windings are named A and B in this documentation.
 
 | Property | [^3] | [^5] |
 |---|---|---|
@@ -284,19 +310,29 @@ two windings that are mirror images of each other. The pad assignments come
 from tracing the metal. In [^3] the left S1 and S3 pads and the right S2 pad
 are one DC net and the remaining three signal pads are another. In [^5] the
 three signal pads on the left are one DC net and the three on the right
-another. A continuity check on a good die should show exactly that.
+another. A continuity check on a functional die is expected to show these
+nets.
 
-Which winding is meant as the primary is not recorded.
+The repository does not record which winding is intended as the primary.
 
-Matching de-embedding structures: [^4], [^6] and [^7].
+The matching [de-embedding structures](#de-embedding-structures) are [^4],
+[^6] and [^7].
 
 ## De-embedding structures
 
 ![Two-port launches with the signals joined and open](img/open_short_2port.png)
 
+*Two-port launches on the top edge: structure 11 (left, signals joined) and
+structure 12 (right, signals open).*
+
 ![Three-port launches with the signals joined and open](img/open_short_3port.png)
 
+*Three-port launches: structure 6 (left edge, signals joined) and structure 7
+(right edge, signals open).*
+
 ![Three-line thru between two three-port launches](img/thru_3port.png)
+
+*Structure 4, the three-line thru between two three-port launches.*
 
 | # | Launch cell | Edge | Frame pads | What joins the signal pads |
 |---|---|---|---|---|
@@ -351,7 +387,9 @@ the bottom edge, 9 to 36 up the right edge, 37 to 44 along the top edge from
 right to left and 45 to 72 down the left edge. The other 174 are the inner
 rows of the launches.
 
-Frame pads of each launch, in order along the die edge:
+### Frame pads of each launch
+
+The frame pads of each launch are listed in order along the die edge.
 
 | Structure | Die edge | G | S1 | S2 | S3 | G | Pad openings |
 |---|---|---|---|---|---|---|---|
@@ -370,6 +408,8 @@ Frame pads of each launch, in order along the die edge:
 | [^10] | right | 33 | 34 | 35 | none | 36 | 12 |
 | [^11] | top | 44 | 43 | 42 | none | 41 | 12 |
 | [^12] | top | 40 | 39 | 38 | none | 37 | 12 |
+
+### All frame pads
 
 <details>
 <summary>All 72 frame pads</summary>
@@ -455,7 +495,7 @@ this chip. Sixteen pads have no such label.
 
 </details>
 
-## Everything else on the die
+## Other features on the die
 
 | Item | Cell | Where | Notes |
 |---|---|---|---|
@@ -469,15 +509,15 @@ this chip. Sixteen pads have no such label.
 
 ## Expected values
 
-These are hand calculations from the drawn geometry and the PDK's typical
-values. Run [`scripts/expected_values.py`](scripts/expected_values.py) to
-reproduce them. No EM simulation and no measurement is recorded in this
-repository.
+The expected values are hand calculations from the drawn geometry and the
+typical values of the PDK. They are reproduced by
+[`scripts/expected_values.py`](scripts/expected_values.py). No EM simulation
+and no measurement is recorded in this repository.
 
 ### Capacitance
 
-`C = area × capacitance per area`, with 2.0 fF/µm² typical and 1.8 to
-2.2 fF/µm² as the limits from the
+The capacitance is `C = area × capacitance per area`, with 2.0 fF/µm²
+typical and 1.8 to 2.2 fF/µm² as the limits from the
 [PDK MIM specification](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/spice/elec_specs/elec_specs_6_4.html).
 
 | # | Area (µm²) | Typical | Minimum | Maximum |
@@ -513,8 +553,8 @@ with `n` turns, track width `w`, spacing `s` and outer dimension `d_out`.
 
 The expression is for a plain spiral in free space. It leaves out the
 substrate, the ground ring 10 µm from the winding, the feed stubs, and for
-[^9] the crossover and centre tap. Treat the numbers as a check on the order
-of magnitude.
+[^9] the crossover and centre tap. The values are therefore order-of-magnitude
+estimates.
 
 ### DC resistance
 
@@ -528,22 +568,24 @@ the Metal5 area of the winding divided by the track width squared.
 | [^8] | 55614 | 82 | 1.18 Ω |
 | [^9] | 40981 | 61 | 0.87 Ω |
 
-This counts each corner as a full square and ignores the via resistance and
-the higher resistance of the Metal1 and Metal2 underpass, so it is a rough
-figure. It does not include the launch or the probe contact.
+This calculation counts each corner as a full square and ignores the via
+resistance and the higher resistance of the Metal1 and Metal2 underpass, so
+the result is approximate. It does not include the launch or the probe
+contact.
 
 ### Transformers
 
 No hand estimate is given. The winding inductances, the coupling factor and
-the self-resonance need the EM simulation.
+the self-resonant frequency can only be obtained from an EM simulation.
 
-## What is not known
+## Open questions
 
-The layout cannot answer these, and the repository holds nothing else:
+The following questions cannot be answered from the layout, and the
+repository contains no other source of information:
 
 | Question | Status |
 |---|---|
-| Which openEMS setup and stack file the chip is meant to validate | not named here. See [Simulating the structures](../README.md#simulating-the-structures) |
+| Which openEMS setup and stack file the chip is meant to validate | not named. See [Simulating the structures](../README.md#simulating-the-structures) |
 | Simulated S-parameters of any structure | not in the repository |
 | Frequency range of interest | not stated |
 | Measurement plan: wire bonded on the chip-on-board package, wafer probed, or both, and with which probes | not stated |

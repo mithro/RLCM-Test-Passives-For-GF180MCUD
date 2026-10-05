@@ -1,7 +1,8 @@
 # Stand-alone GDS files
 
 This directory holds building blocks of the RLCM test chip as separate GDS
-files: two inductors and two versions of the pad frame. The complete chip is
+files: two inductors and two versions of the
+[wafer.space](https://wafer.space/) pad frame. The complete chip is
 in [`RLCMV4_filled.zip`](../RLCMV4_filled.zip) and is described in
 [`docs/README.md`](../docs/README.md). The
 [top-level&nbsp;README](../README.md) gives the overview.
@@ -9,6 +10,8 @@ in [`RLCMV4_filled.zip`](../RLCMV4_filled.zip) and is described in
 The other structures on the chip (the four-turn spiral, the transformers, the
 MIM capacitors and the probe launches) have no stand-alone file. They exist
 only inside the complete layout.
+
+## Files
 
 | File | Top cell | Size (µm) | Contents |
 |---|---|---|---|
@@ -20,12 +23,13 @@ only inside the complete layout.
 | [`0p5x1p0_frame.gds`](0p5x1p0_frame.gds) | `chip_top` | 1936&nbsp;×&nbsp;5122 | [Pad frame](#pad-frames) with I/O cells |
 
 Each inductor file also has a second top-level cell, `$$$CONTEXT_INFO$$$`.
-KLayout writes it to record the parameters of its parametric cells, and it
+[KLayout](https://www.klayout.de/) writes it to record the parameters of its parametric cells, and it
 holds no geometry of its own.
 
 ## File names
 
-The layout agrees with reading the inductor file names like this:
+The repository does not explain the inductor file names. The following
+reading is consistent with the layout:
 
 | Part of the name | Meaning | In the layout |
 |---|---|---|
@@ -59,17 +63,19 @@ two terminals are the EM port markers.*
 | EM port markers | layer 201 on the outer end, layer 202 on the inner end |
 | Sub-cells | 16 `via_dev` cells, one per straight segment |
 
-Differences between the two files:
+The two files differ in one polygon:
 
 | File | Difference |
 |---|---|
 | [`Ind2_D250_N2_W26_TO.gds`](Ind2_D250_N2_W26_TO.gds) | Has a Metal5 bar, 2&nbsp;µm&nbsp;×&nbsp;58&nbsp;µm, that closes the opening of the ring in front of the terminals, 1 µm from the terminal ends |
 | [`Ind2_D250_N2_W26_TO_CLEAN.gds`](Ind2_D250_N2_W26_TO_CLEAN.gds) | No such bar. Everything else is identical |
 
-On the chip this inductor is structure 10, cell `SpiralInductor_2P_282x282`.
+On the chip this inductor is
+[structure 10](../docs/README.md#structures), cell
+`SpiralInductor_2P_282x282`.
 That cell has the same number of polygons on every metal layer as the `CLEAN`
 file, and adds a wider ground ring (cell `GRM`, 298 µm across) and a
-substrate contact. Details, pads and expected values:
+substrate contact. The details, pads and expected values are given under
 [Spiral inductors in `docs/README.md`](../docs/README.md#spiral-inductors).
 
 ## Symmetric inductor
@@ -95,18 +101,17 @@ three terminals are the EM port markers.*
 | EM port markers | layers 201 and 202 on the two ends, layer 203 on the centre tap |
 | Sub-cells | 14 `via_dev` cells |
 
-Differences between the two files:
+The two files differ in one polygon:
 
 | File | Difference |
 |---|---|
 | [`Ind3_D250_N2_W26_TO.gds`](Ind3_D250_N2_W26_TO.gds) | Has a Metal5 bar, 86&nbsp;µm&nbsp;×&nbsp;2&nbsp;µm, that closes the opening of the ring in front of the terminals, 1 µm from the terminal ends |
 | [`Ind3_D250_N2_W26_TO_CLEAN.gds`](Ind3_D250_N2_W26_TO_CLEAN.gds) | No such bar. Everything else is identical |
 
-On the chip this inductor is structure 9, cell `SymmetricInductor_3P_282x282`,
-placed rotated by 270°. That cell is not a plain copy of either file: it has
+On the chip this inductor is [structure 9](../docs/README.md#structures),
+cell `SymmetricInductor_3P_282x282`, placed rotated by 270°. That cell is not a plain copy of either file: it has
 two more polygons on Metal1 and on Metal2, a wider ground ring (cell
-`GRM_SYM`, 298 µm across) and a substrate contact. Details, pads and
-expected values:
+`GRM_SYM`, 298 µm across) and a substrate contact. The details, pads and expected values are given under
 [Symmetric inductor in `docs/README.md`](../docs/README.md#symmetric-inductor).
 
 ## Pad frames
@@ -116,7 +121,7 @@ expected values:
 | ![Layout of bare_frame.gds](../docs/img/bare_frame.png) | ![Layout of 0p5x1p0_frame.gds](../docs/img/0p5x1p0_frame.png) |
 
 Both files have the outline of the wafer.space 0.5&nbsp;×&nbsp;1 slot and the
-same 72 bond pads in the same places.
+same 72 bond pads in the same places. They compare as follows:
 
 | Property | [`bare_frame.gds`](bare_frame.gds) | [`0p5x1p0_frame.gds`](0p5x1p0_frame.gds) |
 |---|---|---|
@@ -127,6 +132,8 @@ same 72 bond pads in the same places.
 | Core | empty | two `gf180mcu_fd_ip_sram__sram512x8m8wm1` SRAM macros |
 | wafer.space logo, corner marker, QR code, project ID and shuttle ID cells | yes | yes |
 | Pad name text labels | yes | yes |
+
+The bond pads are distributed along the four edges as follows:
 
 | Edge | Bond pads | Pitch (µm) |
 |---|---|---|
