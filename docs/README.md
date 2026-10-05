@@ -2,7 +2,7 @@
 
 This page describes everything in [`RLCMV4_filled.zip`](../RLCMV4_filled.zip),
 the layout submitted to wafer.space, grouped by structure. For a short
-overview start at the [top-level README](../README.md). All dimensions were
+overview start at the [top-level&nbsp;README](../README.md). All dimensions were
 read from the GDS file. Coordinates are in µm in the top cell, with the origin
 at the lower left corner of the die.
 

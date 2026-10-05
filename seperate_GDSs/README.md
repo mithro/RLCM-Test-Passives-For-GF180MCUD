@@ -4,7 +4,7 @@ This directory holds building blocks of the RLCM test chip as separate GDS
 files: two inductors and two versions of the pad frame. The complete chip is
 in [`RLCMV4_filled.zip`](../RLCMV4_filled.zip) and is described in
 [`docs/README.md`](../docs/README.md). The
-[top-level README](../README.md) gives the overview.
+[top-level&nbsp;README](../README.md) gives the overview.
 
 The other structures on the chip (the four-turn spiral, the transformers, the
 MIM capacitors and the probe launches) have no stand-alone file. They exist
