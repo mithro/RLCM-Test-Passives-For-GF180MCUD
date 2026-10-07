@@ -1,0 +1,6 @@
+model,R_dc_ohm_1um_grid,R_dc_ohm_0p5um_grid,R_return_ohm,R_with_return_ohm
+Ind2_D250_N2_W26_TO,0.8771,0.8777,0.0696,0.9473
+Ind3_D250_N2_W26_TO,0.8918,0.8929,0.6298,1.5227
+spiral_2turn,0.8771,0.8777,0.0363,0.9140
+spiral_4turn,1.2899,1.2904,0.0363,1.3267
+symmetric,0.8918,0.8929,0.1531,1.0460

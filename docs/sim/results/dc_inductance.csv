@@ -1,0 +1,7 @@
+model,L_nH_1um_grid,L_nH_0p5um_grid,reference_nH
+check: straight bar 250 um x 26 um,0.1628,,0.1637
+Ind2_D250_N2_W26_TO,1.1218,1.1222,
+Ind3_D250_N2_W26_TO,1.1419,1.1429,
+spiral_2turn,1.1218,1.1222,
+spiral_4turn,1.7962,1.7964,
+symmetric,1.1419,1.1429,
