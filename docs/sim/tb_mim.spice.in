@@ -1,0 +1,19 @@
+* Capacitance of the two RLCM MIM capacitors from the PDK model cap_mim_2f0_m4m5_noshield
+* (2 fF/um2 MIM between Metal4 and Metal5). run_mim.py replaces CORNER with
+* mimcap_typical, mimcap_ss or mimcap_ff.
+.lib pdk/libs.tech/ngspice/sm141064.ngspice CORNER
+
+* Structure 1: 100 um x 100 um top plate
+v1 a1 0 dc 0 ac 1
+x1 a1 0 cap_mim_2f0_m4m5_noshield c_width=100u c_length=100u
+* Structure 2: 54 um x 25 um top plate
+v2 a2 0 dc 0 ac 1
+x2 a2 0 cap_mim_2f0_m4m5_noshield c_width=54u c_length=25u
+
+.control
+ac lin 1 1meg 1meg
+let c1 = -imag(i(v1)) / (2 * pi * frequency)
+let c2 = -imag(i(v2)) / (2 * pi * frequency)
+echo "RESULT c1_pF $&c1 c2_pF $&c2"
+.endc
+.end
