@@ -87,6 +87,19 @@ comment at the top of each.
 
 "chip" is the GDS file inside [`RLCMV4_filled.zip`](../RLCMV4_filled.zip).
 
+## Simulation plots
+
+[`sim_capacitors.png`](img/sim_capacitors.png) and
+[`sim_inductors.png`](img/sim_inductors.png) are drawn from the result files
+in [`sim/results/`](sim/results), not from the layout:
+
+```sh
+uv run docs/sim/plot_results.py
+```
+
+Running the simulations that produce the result files is described in
+[`sim/README.md`](sim/README.md#running-the-simulations).
+
 ## How the layout is drawn
 
 The renders do not use the PDK's layer properties file. With five metals
