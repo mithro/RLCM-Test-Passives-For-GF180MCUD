@@ -70,7 +70,7 @@ for md in files:
         if line.startswith("|") and re.search(r"\d ×|× \d", line):
             report("NBSP", line[:70])
         # A coordinate is a pair of exactly two numbers, not part of a longer list.
-        if line.startswith("|") and re.search(r"(?<!, )(?<![\w./])\d+(\.\d+)?, \d+(\.\d+)?(?![\w./]|, \d)", line):
+        if line.startswith("|") and re.search(r"(?<!, )(?<![\w./])\d+(\.\d+)?, \d+(\.\d+)?(?![\w./]|, \d| and )", line):
             report("NBSP", line[:70])
     for m in re.finditer(r"\[[^\]]* README\]", prose):
         report("NBSP", m.group(0))
