@@ -101,6 +101,7 @@ its lower left corner, both in the coordinates of the top cell.
 | [`seperate_GDSs/`](seperate_GDSs/README.md) | Stand-alone GDS files of two of the inductors and of the two pad frames |
 | [`docs/README.md`](docs/README.md) | Full details of every structure in the submitted layout, and the pad tables |
 | [`docs/scripts/expected_values.py`](docs/scripts/expected_values.py) | The hand calculations behind the expected values quoted in the sections on each structure type |
+| [`docs/sim/README.md`](docs/sim/README.md) | openEMS, ngspice and DC simulations of the capacitors and inductors, which check the hand calculations, and the openEMS workflow the chip is meant to validate |
 | [`docs/updating-images.md`](docs/updating-images.md) | The procedure for regenerating the pictures in this documentation |
 
 ## Probe launches
@@ -172,7 +173,15 @@ The expected capacitance is the top plate area multiplied by the capacitance
 per unit area of 2.0 fF/µm² (1.8 fF/µm² to 2.2 fF/µm²) that the
 [PDK lists](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/spice/elec_specs/elec_specs_6_4.html)
 for its densest MIM option, which is the value the `gf180mcuD` tooling
-assumes. No EM simulation result is recorded in this repository.
+assumes. Two simulations confirm it:
+
+| # | Hand calculation | PDK ngspice model | openEMS |
+|---|---|---|---|
+| [^1] | 20.0 pF | 20.00 pF | 19.93 pF |
+| [^2] | 2.70 pF | 2.72 pF | 2.69 pF |
+
+The models, conditions and plots are in
+[`docs/sim/README.md`](docs/sim/README.md#capacitors).
 
 ### Further reading
 
@@ -192,8 +201,8 @@ through an underpass on Metal1 and Metal2 beneath the turns.
 
 | # | Turns | Inner opening (µm) | Expected inductance | Expected DC resistance |
 |---|---|---|---|---|
-| [^10] | 2 | 142 | 1.3 nH | 0.8 Ω |
-| [^8] | 4 | 30 | 2.1 nH | 1.2 Ω |
+| [^10] | 2 | 142 | 1.07 nH to 1.12 nH | 0.88 Ω |
+| [^8] | 4 | 30 | 1.65 nH to 1.80 nH | 1.29 Ω |
 
 The full description is under
 [Spiral inductors in `docs/README.md`](docs/README.md#spiral-inductors). The
@@ -211,15 +220,28 @@ applied to `-1/Y21` give the values for the series branch.
 
 ### Expected values
 
-The inductance is calculated from the current sheet expression of
-[Mohan et al.](https://doi.org/10.1109/4.792620) and the DC resistance from
-the
-[PDK sheet resistances](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/layout/inter_specs/inter_specs_4.html).
-Both are hand calculations that ignore the substrate, the ground ring and the
-underpass. They are derived under
-[Expected values in `docs/README.md`](docs/README.md#expected-values). The
-quality factor and the self-resonant frequency can only be obtained from an
-EM simulation, and no simulation result is recorded in this repository.
+The expected values in the table are simulated. The hand calculation, with
+the current sheet expression of [Mohan et al.](https://doi.org/10.1109/4.792620)
+for the inductance and the
+[PDK sheet resistances](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/layout/inter_specs/inter_specs_4.html)
+for the resistance, gives higher inductances. The simulated values are 14 % to
+23 % below it:
+
+| # | Quantity | Hand calculation | Free-space solver on the layout | openEMS |
+|---|---|---|---|---|
+| [^10] | L | 1.30 nH | 1.12 nH | 1.07 nH |
+| [^10] | R | 0.84 Ω | 0.88 Ω | |
+| [^8] | L | 2.13 nH | 1.80 nH | 1.65 nH |
+| [^8] | R | 1.18 Ω | 1.29 Ω | |
+
+The free-space solver computes the inductance of the drawn metal with no
+substrate. openEMS adds the substrate and the conducting planes of its
+enclosure. In openEMS the quality factor peaks at 11.7 at 6.1 GHz for the
+two-turn spiral and at 4.7 at 3.5 GHz for the four-turn spiral. The openEMS
+resistance includes the return path of its ports and is left out of the
+table. The hand calculation is derived under
+[Expected values in `docs/README.md`](docs/README.md#expected-values), and the
+simulations are described in [`docs/sim/README.md`](docs/sim/README.md#inductors).
 
 ### Further reading
 
@@ -255,9 +277,17 @@ using [^6] and [^7].
 
 ### Expected values
 
-The expected inductance is about 1.3 nH end to end, from the same hand
-calculation as for the two-turn spiral, which does not model the crossover or
-the centre tap. No EM simulation result is recorded in this repository.
+The hand calculation for the two-turn spiral, which does not model the
+crossover or the centre tap, gives 1.30 nH end to end. The simulations give
+less:
+
+| Quantity | Hand calculation | Free-space solver on the layout | openEMS |
+|---|---|---|---|
+| L between S1 and S3 | 1.30 nH | 1.14 nH | 1.12 nH |
+| DC resistance between S1 and S3 | 0.87 Ω | 0.89 Ω | |
+
+The openEMS quality factor peaks at 11.6 at 6.3 GHz. See
+[`docs/sim/README.md`](docs/sim/README.md#inductors).
 
 ### Further reading
 
@@ -372,52 +402,6 @@ pads. No values are recorded in this repository.
 3. T. E. Kolding, "A four-step method for de-embedding gigahertz on-wafer CMOS measurements", IEEE Trans. Electron Devices, vol. 47, no. 4, pp. 734-740, 2000. [doi:10.1109/16.830987](https://doi.org/10.1109/16.830987)
 4. L. F. Tiemeijer and R. J. Havens, "A calibrated lumped-element de-embedding technique for on-wafer RF characterization of high-quality inductors and high-speed transistors", IEEE Trans. Electron Devices, vol. 50, no. 3, pp. 822-829, 2003. [doi:10.1109/TED.2003.811396](https://doi.org/10.1109/TED.2003.811396)
 5. H. Ito and K. Masu, "A simple through-only de-embedding method for on-wafer S-parameter measurements up to 110 GHz", IEEE MTT-S Int. Microwave Symp. Digest, pp. 383-386, 2008. [doi:10.1109/MWSYM.2008.4633183](https://doi.org/10.1109/MWSYM.2008.4633183)
-
-## Simulating the structures
-
-The stated purpose of the chip is to verify an openEMS simulation flow
-against silicon. This repository holds only layout. It contains no simulation
-scripts, no stack file and no simulated results, and it does not name the
-flow. The following components are published elsewhere:
-
-| Component | Location |
-|---|---|
-| GDS to openEMS workflow | [VolkerMuehlhaus/gds2openEMS](https://github.com/VolkerMuehlhaus/gds2openEMS) |
-| GDS to Palace workflow | [VolkerMuehlhaus/gds2palace_ihp_sg13g2](https://github.com/VolkerMuehlhaus/gds2palace_ihp_sg13g2) |
-| GF180MCUD stack files for both, by the author of this chip | [`EM-Flow/` in EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/tree/main/EM-Flow) |
-| Stack viewer | [VolkerMuehlhaus/setupEM](https://github.com/VolkerMuehlhaus/setupEM) |
-
-These workflows take a GDS file, an XML description of the metal and
-dielectric stack, and a Python model script. Ports are drawn in the GDS as
-polygons on additional layers, by convention 201 and above, and the model
-script maps each layer to a port number. The inductor and transformer cells
-on this chip carry such polygons on layers 201 to 207. They are the red marks
-in the pictures and are listed per cell under
-[EM port markers in `docs/README.md`](docs/README.md#em-port-markers).
-
-### Procedure
-
-To produce the expected S-parameters for one structure:
-
-1. Unzip [`RLCMV4_filled.zip`](RLCMV4_filled.zip) and extract the required
-   cell, or start from a file in [`seperate_GDSs/`](seperate_GDSs/README.md).
-2. Take [`OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml`](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/main/EM-Flow/OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml)
-   and read the [README next to it](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/main/EM-Flow/README.md),
-   in particular the note on MIM vias.
-3. Write a gds2openEMS model script that maps the port layers to ports,
-   following the
-   [gds2openEMS user guide](https://github.com/VolkerMuehlhaus/gds2openEMS/blob/main/doc/userguide_md_format/Using_OpenEMS_Python_with_IHP_SG13G2_v3.md).
-4. Run the script and compare the resulting Touchstone file with the
-   de-embedded measurement.
-
-Steps 3 and 4 have not been carried out as part of this documentation.
-
-### Further reading
-
-1. G. Al Sabagh, "The Design Journey of mWATTBAT: The Open-Source Radar Chip", master's thesis, Johannes Kepler University Linz, 2026, which has a section on transmission lines in openEMS. [PDF](https://epub.jku.at/download/pdf/13546624.pdf)
-2. V. Mühlhaus, "User friendly workflow for RFIC EM simulation using openEMS", talk at the Free Silicon Conference, 2025. [Programme](https://wiki.f-si.org/FSiC2025)
-3. T. Liebig, A. Rennings, S. Held and D. Erni, "openEMS: a free and open source equivalent-circuit (EC) FDTD simulation platform supporting cylindrical coordinates suitable for the analysis of traveling wave MRI applications", Int. J. Numerical Modelling, vol. 26, no. 6, pp. 680-696, 2013. [doi:10.1002/jnm.1875](https://doi.org/10.1002/jnm.1875)
-4. [openEMS](https://www.openems.de/) and [Palace](https://awslabs.github.io/palace/stable/) project pages.
 
 ## License
 

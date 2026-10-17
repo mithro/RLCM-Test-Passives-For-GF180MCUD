@@ -509,10 +509,13 @@ this chip. Sixteen pads have no such label.
 
 ## Expected values
 
-The expected values are hand calculations from the drawn geometry and the
-typical values of the PDK. They are reproduced by
-[`scripts/expected_values.py`](scripts/expected_values.py). No EM simulation
-and no measurement is recorded in this repository.
+The values in this section are hand calculations from the drawn geometry and
+the typical values of the PDK. They are reproduced by
+[`scripts/expected_values.py`](scripts/expected_values.py). Simulations of the
+drawn layout, in [`sim/README.md`](sim/README.md), confirm the capacitances to
+within 1 % and the resistances to within 9 %, and give inductances 12 % to
+23 % below the hand calculation. No measurement is recorded in this
+repository.
 
 ### Capacitance
 
@@ -585,8 +588,8 @@ repository contains no other source of information:
 
 | Question | Status |
 |---|---|
-| Which openEMS setup and stack file the chip is meant to validate | not named. See [Simulating the structures](../README.md#simulating-the-structures) |
-| Simulated S-parameters of any structure | not in the repository |
+| Which openEMS setup and stack file the chip is meant to validate | not named. The simulations in [`sim/README.md`](sim/README.md#the-openems-workflow) use the author's published stack file and port markers |
+| The author's own simulated S-parameters | not in the repository. [`sim/README.md`](sim/README.md) has independent simulations of the capacitors and inductors |
 | Frequency range of interest | not stated |
 | Measurement plan: wire bonded on the chip-on-board package, wafer probed, or both, and with which probes | not stated |
 | Intended de-embedding method | not stated |
