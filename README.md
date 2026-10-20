@@ -224,8 +224,8 @@ The expected values in the table are simulated. The hand calculation, with
 the current sheet expression of [Mohan et al.](https://doi.org/10.1109/4.792620)
 for the inductance and the
 [PDK sheet resistances](https://gf180mcu-pdk.readthedocs.io/en/latest/analog/layout/inter_specs/inter_specs_4.html)
-for the resistance, gives higher inductances. The simulated values are 14 % to
-23 % below it:
+for the resistance, gives higher inductances and lower resistances. The
+simulated inductances are 14 % to 23 % below it:
 
 | # | Quantity | Hand calculation | Free-space solver on the layout | openEMS |
 |---|---|---|---|---|
@@ -236,10 +236,11 @@ for the resistance, gives higher inductances. The simulated values are 14 % to
 
 The free-space solver computes the inductance of the drawn metal with no
 substrate. openEMS adds the substrate and the conducting planes of its
-enclosure. In openEMS the quality factor peaks at 11.7 at 6.1 GHz for the
-two-turn spiral and at 4.7 at 3.5 GHz for the four-turn spiral. The openEMS
-resistance includes the return path of its ports and is left out of the
-table. The hand calculation is derived under
+enclosure. The openEMS resistance includes the return path of its ports and
+is left out of the table. In openEMS the quality factor, which includes the
+same return path and so is lower than that of the winding alone, peaks at
+11.7 at 6.1 GHz for the two-turn spiral and at 4.7 at 3.5 GHz for the
+four-turn spiral. The hand calculation is derived under
 [Expected values in `docs/README.md`](docs/README.md#expected-values), and the
 simulations are described in [`docs/sim/README.md`](docs/sim/README.md#inductors).
 
@@ -260,6 +261,11 @@ spiral inductors. The two turns exchange position at one crossover, where one
 path remains on Metal3 to Metal5 and the other drops to Metal1 and Metal2.
 The centre tap is brought out between the two ends.
 
+| Quantity | Expected value |
+|---|---|
+| Inductance between S1 and S3 | 1.12 nH to 1.14 nH |
+| DC resistance between S1 and S3 | 0.89 Ω |
+
 The full description is under
 [Symmetric inductor in `docs/README.md`](docs/README.md#symmetric-inductor).
 The inductor is also available as a stand-alone file in
@@ -277,16 +283,19 @@ using [^6] and [^7].
 
 ### Expected values
 
-The hand calculation for the two-turn spiral, which does not model the
-crossover or the centre tap, gives 1.30 nH end to end. The simulations give
-less:
+The expected values above are simulated, as for the spiral inductors. The
+hand calculation for the two-turn spiral, which does not model the crossover
+or the centre tap, gives 1.30 nH end to end, and the simulated inductances are
+12 % to 14 % below it:
 
 | Quantity | Hand calculation | Free-space solver on the layout | openEMS |
 |---|---|---|---|
 | L between S1 and S3 | 1.30 nH | 1.14 nH | 1.12 nH |
 | DC resistance between S1 and S3 | 0.87 Ω | 0.89 Ω | |
 
-The openEMS quality factor peaks at 11.6 at 6.3 GHz. See
+As for the spiral inductors, the openEMS resistance includes the return path
+of the ports and is left out of the table. The openEMS quality factor, which
+includes the same return path, peaks at 11.6 at 6.3 GHz. See
 [`docs/sim/README.md`](docs/sim/README.md#inductors).
 
 ### Further reading
