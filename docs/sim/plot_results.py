@@ -1,5 +1,6 @@
 # /// script
-# dependencies = ["matplotlib", "numpy"]
+# requires-python = ">=3.10"
+# dependencies = ["matplotlib==3.11.2"]
 # ///
 """Plot the openEMS results against the hand calculations.
 

@@ -1,5 +1,6 @@
 # /// script
-# dependencies = ["klayout", "numpy", "scipy"]
+# requires-python = ">=3.10"
+# dependencies = ["klayout==0.30.12", "numpy==2.5.4", "scipy==1.18.1"]
 # ///
 """Free-space DC inductance of the RLCM inductors from the current distribution in the layout.
 
@@ -112,6 +113,7 @@ def bar_check(h_um=1.0):
 
 
 def main():
+    dcr.check_inputs()
     rows = []
     numeric, rosa = bar_check()
     rows.append({"model": "check: straight bar 250 um x 26 um", "L_nH_1um_grid": "%.4f" % (numeric * 1e9),

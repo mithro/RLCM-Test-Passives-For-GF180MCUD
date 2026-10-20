@@ -1,5 +1,6 @@
 # /// script
-# dependencies = ["klayout", "numpy", "scipy"]
+# requires-python = ">=3.10"
+# dependencies = ["klayout==0.30.12", "numpy==2.5.4", "scipy==1.18.1"]
 # ///
 """DC resistance of the RLCM inductors from a resistor network built on the layout.
 
@@ -144,12 +145,17 @@ def resistance(path, cellname, port_layers, direction, h_um, side="terminal", fi
     return 1.0 / current, potential, h_um * 1e-6
 
 
+def check_inputs():
+    """Stop before any result is written if a model layout is missing."""
+    missing = [str(path) for path, _, _, _ in MODELS.values() if not path.exists()]
+    if missing:
+        raise SystemExit("not found, run docs/sim/make_models.py first:\n  " + "\n  ".join(missing))
+
+
 def main():
+    check_inputs()
     rows = []
     for name, (path, cellname, ports, direction) in MODELS.items():
-        if not path.exists():
-            print("%s: %s not found, skipped" % (name, path))
-            continue
         coarse = resistance(path, cellname, ports, direction, 1.0)
         fine = resistance(path, cellname, ports, direction, 0.5)
         ground = resistance(path, cellname, ports, direction, 0.5, side="reference")
