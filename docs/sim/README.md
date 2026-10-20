@@ -16,18 +16,19 @@ inductors. The transformers have no hand calculation and are not simulated here.
 | 2 | | | | 2.724 pF | +0.9 % | PDK ngspice model |
 | 10 | Spiral inductor, two turns | L | 1.30 nH | 1.065 nH | −18 % | openEMS |
 | 10 | | | | 1.122 nH | −14 % | free-space DC solver |
-| 10 | | R | 0.84 Ω | 0.878 Ω | +5 % | DC solver |
+| 10 | | R | 0.84 Ω | 0.878 Ω | +4 % | DC solver |
 | 8 | Spiral inductor, four turns | L | 2.13 nH | 1.646 nH | −23 % | openEMS |
 | 8 | | | | 1.796 nH | −16 % | free-space DC solver |
 | 8 | | R | 1.18 Ω | 1.290 Ω | +9 % | DC solver |
 | 9 | Symmetric inductor | L | 1.30 nH | 1.122 nH | −14 % | openEMS |
 | 9 | | | | 1.143 nH | −12 % | free-space DC solver |
-| 9 | | R | 0.87 Ω | 0.893 Ω | +3 % | DC solver |
+| 9 | | R | 0.87 Ω | 0.893 Ω | +2 % | DC solver |
 
-The capacitances agree with the hand calculation to within 1 %. The DC
-resistances agree to within 9 %. The hand calculation overestimates the
-inductances by 12 % to 23 %: both simulation methods, which use the drawn
-geometry, give lower values than the closed-form expression. The openEMS
+The differences are taken against the unrounded hand calculation. The
+capacitances agree with the hand calculation to within 1 %. The DC resistances
+agree to within 9 %. The simulated inductances are 12 % to 23 % below the hand
+calculation: both simulation methods, which use the drawn geometry, give lower
+values than the closed-form expression. The openEMS
 inductances are those of the cells taken from the chip layout. For structures
 10 and 9 they agree to within 0.2 % with the author's stand-alone files in
 [`seperate_GDSs/`](../../seperate_GDSs/README.md); see [Inductors](#inductors).
@@ -56,7 +57,7 @@ The free-space inductance is the quantity that the hand calculation estimates.
 | Enclosure | Perfect conductors on all six faces, 200 µm from the layout at the sides, under the substrate and 300 µm above the chip |
 | Mesh | 1 µm in the metal, one cell per metal and via layer in height |
 | Stop criterion | Field energy 50 dB below its peak |
-| Software | openEMS v0.37.0-rc3, gds2openEMS at commit [`551deea`](https://github.com/VolkerMuehlhaus/gds2openEMS/tree/551deea7b3a89d904086d7a4d06d5133b2b4f186), ngspice 44.2, gf180mcuD models from [wafer-space/gf180mcu](https://github.com/wafer-space/gf180mcu) at commit `ac7d869` |
+| Software | openEMS v0.37.0-rc3, gds2openEMS at commit [`551deea`](https://github.com/VolkerMuehlhaus/gds2openEMS/tree/551deea7b3a89d904086d7a4d06d5133b2b4f186), ngspice 44.2, gf180mcuD models from [wafer-space/gf180mcu](https://github.com/wafer-space/gf180mcu) at commit [`ac7d869`](https://github.com/wafer-space/gf180mcu/tree/ac7d8696de96a4d708e768b607ae37f02207a354), KLayout 0.30.12, NumPy 2.5.4 and SciPy 1.18.1 for the DC solvers |
 
 The openEMS values are read at 0.2 GHz for the inductors and at 0.3 GHz for
 the capacitors. Below about 0.1 GHz the simulated time is too short to resolve
@@ -67,7 +68,7 @@ change the apparent values.
 
 | File | Contents |
 |---|---|
-| [`Dockerfile`](Dockerfile) | Image with openEMS, gds2openEMS, KLayout and ngspice. |
+| [`Dockerfile`](Dockerfile) | Image with openEMS, gds2openEMS and ngspice. |
 | [`make_models.py`](make_models.py) | Writes the openEMS model layouts to `build/` from the chip layout. |
 | [`run_openems.py`](run_openems.py) | Runs one openEMS model and writes its S-parameters and derived values. |
 | [`tb_mim.spice.in`](tb_mim.spice.in), [`run_mim.py`](run_mim.py) | ngspice testbench of the PDK MIM model and its driver. |
@@ -79,12 +80,15 @@ change the apparent values.
 
 From the repository root:
 
-1. Build the image and link the `gf180mcuD` directory of a PDK clone into this
-   directory:
+1. Build the image, and clone the PDK at the commit that was used and link its
+   `gf180mcuD` directory into this directory. The PDK clone can live anywhere;
+   `../gf180mcu` is an example.
 
    ```sh
    docker build -t rlcm-sim docs/sim
-   ln -s /path/to/gf180mcu/gf180mcuD docs/sim/pdk
+   git clone https://github.com/wafer-space/gf180mcu ../gf180mcu
+   git -C ../gf180mcu checkout ac7d869
+   ln -s "$(readlink -f ../gf180mcu/gf180mcuD)" docs/sim/pdk
    ```
 
 2. Unzip the chip layout and write the model layouts:
@@ -113,9 +117,11 @@ From the repository root:
    uv run docs/sim/plot_results.py
    ```
 
-gds2openEMS stores a hash of each model with its results and skips the solver
-when the model is unchanged, so step 3 can be repeated to redo the
-post-processing alone.
+gds2openEMS stores a hash of each model with its field data in `build/`, and
+skips the solver when the model is unchanged. The hash also covers
+[`run_openems.py`](run_openems.py) up to its `runSimulation()` call, so step 3
+redoes only the post-processing as long as neither the model nor that part of
+the script has changed.
 
 ## Capacitors
 
@@ -141,6 +147,12 @@ The PDK model adds a perimeter term of 0.24 fF/µm to the area term of
 1.99 fF/µm², which accounts for its 0.9 % excess on the small capacitor. The
 stack file models the dielectric as exactly 2.0 fF/µm², so openEMS checks the
 geometry and the feed, not the value of the dielectric.
+
+Only the capacitance is taken from the capacitor runs. Their real part, which
+the result files also contain, falls steeply with frequency: for the larger
+capacitor from 4.7 Ω at 0.1 GHz to 0.73 Ω at 0.3 GHz and 0.31 Ω at 1 GHz.
+This repository does not establish whether the low-frequency values are
+physical or a consequence of the limited simulated time, and they are not used.
 
 ![Capacitance against frequency from openEMS from 0.1 GHz to 2 GHz: the large capacitor is 19.93 pF at 0.3 GHz and rises to 22 pF at 2 GHz, the small one stays between 2.69 pF and 2.71 pF](../img/sim_capacitors.png)
 
@@ -194,9 +206,13 @@ four-turn spiral openEMS is 11 % higher at 0.2 GHz and 8 % higher at
 0.05 GHz, and its resistance rises with frequency faster than that of the other
 inductors, to 2.4 Ω at 1 GHz. This repository does not establish the cause.
 
-The winding resistance alone is the "DC solver" column, which the hand
-calculation underestimates by 3 % to 9 % because it leaves out the vias and the
-parts of the underpass and crossover that run on fewer metals.
+The winding resistance alone is the "DC solver" column, which is 2 % to 9 %
+above the hand calculation. The hand calculation divides the Metal5 area of
+the winding by the square of the track width and takes five metals in
+parallel throughout. The DC solver also includes the resistance of the vias,
+the parts of the underpass and crossover that run on fewer metals, and the
+current distribution at the corners. This repository does not establish how
+much each of these contributes.
 
 ### Inductance
 
@@ -256,9 +272,14 @@ layer to a port number. The inductor and transformer cells on this chip carry
 such polygons on layers 201 to 207. They are listed per cell under
 [EM port markers in `docs/README.md`](../README.md#em-port-markers).
 
-The stand-alone files `Ind2_D250_N2_W26_TO.gds` and `Ind3_D250_N2_W26_TO.gds`
-differ from their `CLEAN` versions by one Metal5 bar 1 µm in front of the
-terminals. With that bar, each port marker spans the gap between a terminal
+The stand-alone files
+[`Ind2_D250_N2_W26_TO.gds`](../../seperate_GDSs/Ind2_D250_N2_W26_TO.gds) and
+[`Ind3_D250_N2_W26_TO.gds`](../../seperate_GDSs/Ind3_D250_N2_W26_TO.gds)
+differ from their `CLEAN` versions,
+[`Ind2_D250_N2_W26_TO_CLEAN.gds`](../../seperate_GDSs/Ind2_D250_N2_W26_TO_CLEAN.gds)
+and
+[`Ind3_D250_N2_W26_TO_CLEAN.gds`](../../seperate_GDSs/Ind3_D250_N2_W26_TO_CLEAN.gds),
+by one Metal5 bar 1 µm in front of the terminals. With that bar, each port marker spans the gap between a terminal
 and ground, which is the arrangement an in-plane port of gds2openEMS needs.
 The `TO` files therefore appear to be the author's simulation models; the
 repository does not say so.
