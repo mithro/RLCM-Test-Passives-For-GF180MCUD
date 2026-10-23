@@ -83,7 +83,7 @@ EDGE, BAR_END, CUT_START = 150, 149, 128
 
 
 def ground_bar(ports):
-    """Metal5 bar from 1 um beyond the port markers to the ring, 3 um wider than the markers on each side."""
+    """Metal5 bar from the outer edge of the port markers, 1 um beyond the terminal ends, to the ring, 3 um wider than the markers on each side."""
     box = ports.bbox()
     if box.width() < box.height():  # markers stacked vertically: terminals point along +x
         return um(box.right / 1000, box.bottom / 1000 - 3, BAR_END, box.top / 1000 + 3)

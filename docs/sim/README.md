@@ -50,19 +50,19 @@ The free-space inductance is the quantity that the hand calculation estimates.
 
 | Item | Value |
 |---|---|
-| Layer stack | [`OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml`](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/7deb253d3b96f0daf68dac80536ab2ca4f24b464/EM-Flow/OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml) by the author of the chip, downloaded at run time |
+| Layer stack | [`OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml`](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/7deb253d3b96f0daf68dac80536ab2ca4f24b464/EM-Flow/OPENEMS-GF180MCUD-1P5M-TM11KA-MIMB.xml) by the author of the chip, downloaded at run time; SHA-256 `e90b7a9ff44bff4b0ddda23b91ca7611d9353b5cc9564699948992539bbf01fc` |
 | Metals | Metal1 to Metal4 0.55 µm at 20.2 MS/m (0.090 Ω/sq), Metal5 1.19 µm at 21.0 MS/m (0.040 Ω/sq) |
 | MIM dielectric | 0.31 µm with a relative permittivity of 70, which gives 2.0 fF/µm² |
 | Substrate | 191 µm of silicon at 2 S/m under 8.5 µm of oxide |
-| Enclosure | Perfect conductors on all six faces, 200 µm from the layout at the sides, under the substrate and 300 µm above the chip |
+| Enclosure | Perfect conductors on all six faces: 200 µm from the layout at the sides, directly under the substrate, and at the top of the 300 µm of air above the chip |
 | Mesh | 1 µm in the metal, one cell per metal and via layer in height |
 | Stop criterion | Field energy 50 dB below its peak |
-| Software | openEMS v0.37.0-rc3, gds2openEMS at commit [`551deea`](https://github.com/VolkerMuehlhaus/gds2openEMS/tree/551deea7b3a89d904086d7a4d06d5133b2b4f186), ngspice 44.2, gf180mcuD models from [wafer-space/gf180mcu](https://github.com/wafer-space/gf180mcu) at commit [`ac7d869`](https://github.com/wafer-space/gf180mcu/tree/ac7d8696de96a4d708e768b607ae37f02207a354), KLayout 0.30.12, NumPy 2.5.4 and SciPy 1.18.1 for the DC solvers |
+| Software | openEMS v0.37.0-rc3, gds2openEMS at commit [`551deea`](https://github.com/VolkerMuehlhaus/gds2openEMS/tree/551deea7b3a89d904086d7a4d06d5133b2b4f186), ngspice 44.2, gf180mcuD models from [wafer-space/gf180mcu](https://github.com/wafer-space/gf180mcu) at commit [`ac7d869`](https://github.com/wafer-space/gf180mcu/tree/ac7d8696de96a4d708e768b607ae37f02207a354), KLayout 0.30.12, NumPy 2.5.4 and SciPy 1.18.1 for the DC solvers; the base image and Python packages of the openEMS image are pinned in the [`Dockerfile`](Dockerfile) |
 
 The openEMS values are read at 0.2 GHz for the inductors and at 0.3 GHz for
 the capacitors. Below about 0.1 GHz the simulated time is too short to resolve
-the response, and above about 1 GHz the feed lines and the self-resonance
-change the apparent values.
+the response, and above about 1 GHz the apparent values change with frequency
+(see the figures); the cause is not analysed here.
 
 ## Files
 
@@ -91,20 +91,30 @@ From the repository root:
    ln -s "$(readlink -f ../gf180mcu/gf180mcuD)" docs/sim/pdk
    ```
 
-2. Unzip the chip layout and write the model layouts. Each inductor cell is
-   written twice, with the ground ring cut and, as `<name>_closed`, closed:
+2. Unzip the chip layout, [`RLCMV4_filled.zip`](../../RLCMV4_filled.zip), and
+   write the model layouts. Each inductor cell is written twice, with the
+   ground ring cut and, as `<name>_closed`, closed:
 
    ```sh
    unzip -o RLCMV4_filled.zip -d build
    uv run docs/sim/make_models.py
    ```
 
-3. Run each openEMS model. Each takes 30 to 100 minutes with 12 to 24 threads.
-   The names are listed in `MODELS` in [`run_openems.py`](run_openems.py).
+3. Run each openEMS model. With 12 to 24 threads each took 45 minutes to
+   2 hours here; gds2openEMS records the solve time of each excitation in
+   `build/<model>_data/sub-<n>/time_information.txt`. The names are listed in
+   `MODELS` in [`run_openems.py`](run_openems.py); the second argument `far`
+   gives the run with the side walls moved out.
 
    ```sh
+   for m in mim_100x100 mim_54x25 Ind2_D250_N2_W26_TO Ind3_D250_N2_W26_TO \
+            spiral_2turn spiral_4turn symmetric \
+            spiral_2turn_closed spiral_4turn_closed symmetric_closed; do
+       docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -e OPENEMS_THREADS=16 \
+           -v "$PWD":/repo -w /repo rlcm-sim python3 docs/sim/run_openems.py $m
+   done
    docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -e OPENEMS_THREADS=16 \
-       -v "$PWD":/repo -w /repo rlcm-sim python3 docs/sim/run_openems.py mim_54x25
+       -v "$PWD":/repo -w /repo rlcm-sim python3 docs/sim/run_openems.py Ind2_D250_N2_W26_TO far
    ```
 
 4. Run the PDK model and the DC solvers, then draw the figures:
@@ -134,8 +144,10 @@ cuts on the top plate are moved to layer 1041, as the
 [README of the stack file](https://github.com/EngGhaith/The-Silent-Owl-GF180MCU-WB-LNA/blob/7deb253d3b96f0daf68dac80536ab2ca4f24b464/EM-Flow/README.md)
 requires: on layer 41 they would join Metal4 to Metal5 through the dielectric.
 One lumped port spans the 2 µm gap between the S1 and S2 stubs at their lower
-end. Its impedance is 5 Ω, which shortens the simulation tenfold and does not
-change the impedance that is derived from it.
+end. Its impedance is 5 Ω rather than 50 Ω. The impedance derived from the
+S-parameters does not depend on the port impedance, and the lower impedance
+makes the RC time constant of the port and the capacitor ten times shorter,
+which shortens the simulated time.
 
 ### Results
 
@@ -158,8 +170,8 @@ physical or a consequence of the limited simulated time, and they are not used.
 ![Capacitance against frequency from openEMS from 0.1 GHz to 2 GHz: the large capacitor is 19.93 pF at 0.3 GHz and rises to 22 pF at 2 GHz, the small one stays between 2.69 pF and 2.71 pF](../img/sim_capacitors.png)
 
 *Figure 1. Capacitance from openEMS, −1 / (2πf Im Z), against the hand
-calculation. The rise with frequency is the series inductance of the feed
-stubs, which matters first for the larger capacitor.*
+calculation. The rise with frequency, which is larger for the larger
+capacitor, is not analysed here.*
 
 ## Inductors
 
@@ -294,7 +306,8 @@ repository does not say so.
 - The models leave out the launches and pads. Measured values include them
   until they are de-embedded with the structures described in the
   [top-level&nbsp;README](../../README.md#de-embedding-structures).
-- The lumped ports add a small series inductance that is not removed.
+- The lumped ports are not de-embedded; their contribution has not been
+  estimated here.
 - The openEMS resistances and quality factors of the inductors include the
   ground return between the two ports (see [Resistance](#resistance)), so the
   quality factors are lower than those of the winding alone.
