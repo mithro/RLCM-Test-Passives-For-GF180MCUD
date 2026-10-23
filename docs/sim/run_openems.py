@@ -4,11 +4,16 @@ Run inside the rlcm-sim Docker image, from the repository root, after
 docs/sim/make_models.py has written the model layouts:
 
     python3 docs/sim/run_openems.py spiral_2turn
-    python3 docs/sim/run_openems.py Ind2_D250_N2_W26_TO mur
+    python3 docs/sim/run_openems.py Ind2_D250_N2_W26_TO far
 
 The optional second argument selects a boundary variant (see VARIANTS). The
 S-parameters are written to docs/sim/results/<model>[_<variant>].s<n>p and the
 derived inductance, resistance or capacitance to the matching .csv file.
+
+gds2openEMS stores a hash of the model and of this script up to the
+runSimulation() call with the field data in docs/sim/build/, and skips the
+solver when both are unchanged. Editing this file above that call therefore
+makes every model run again.
 """
 import csv
 import json
@@ -39,6 +44,10 @@ MODELS = {
     "spiral_2turn": (BUILD / "spiral_2turn.gds", "model", [(201, "x"), (202, "x")], 20e9, 50),
     "spiral_4turn": (BUILD / "spiral_4turn.gds", "model", [(201, "x"), (202, "x")], 20e9, 50),
     "symmetric": (BUILD / "symmetric.gds", "model", [(201, "y"), (202, "y")], 20e9, 50),
+    # The same cells with the ground ring closed into a loop around the winding.
+    "spiral_2turn_closed": (BUILD / "spiral_2turn_closed.gds", "model", [(201, "x"), (202, "x")], 20e9, 50),
+    "spiral_4turn_closed": (BUILD / "spiral_4turn_closed.gds", "model", [(201, "x"), (202, "x")], 20e9, 50),
+    "symmetric_closed": (BUILD / "symmetric_closed.gds", "model", [(201, "y"), (202, "y")], 20e9, 50),
     "Ind2_D250_N2_W26_TO": (HERE.parents[1] / "seperate_GDSs" / "Ind2_D250_N2_W26_TO.gds", "SpiralInductor", [(201, "x"), (202, "x")], 20e9, 50),
     "Ind3_D250_N2_W26_TO": (HERE.parents[1] / "seperate_GDSs" / "Ind3_D250_N2_W26_TO.gds", "SymmetricInductor", [(201, "y"), (202, "y")], 20e9, 50),
     "mim_100x100": (BUILD / "mim_100x100.gds", "model", [(201, "x")], 10e9, 5),
@@ -52,12 +61,13 @@ NUMFREQ = 401
 VARIANTS = {
     "": {},
     "far": {"margin": 600},  # side walls three times as far away
-    "mur": {"Boundaries": ["MUR"] * 6},  # absorbing boundaries on all six faces
 }
 
 
 def main(model, variant=""):
     gds, cellname, ports, fstop, z0 = MODELS[model]
+    if not gds.exists():
+        raise SystemExit("%s not found: run docs/sim/make_models.py first" % gds)
     name = model + ("_" + variant if variant else "")
     BUILD.mkdir(exist_ok=True)
     RESULTS.mkdir(exist_ok=True)

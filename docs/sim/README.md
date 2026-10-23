@@ -69,7 +69,7 @@ change the apparent values.
 | File | Contents |
 |---|---|
 | [`Dockerfile`](Dockerfile) | Image with openEMS, gds2openEMS and ngspice. |
-| [`make_models.py`](make_models.py) | Writes the openEMS model layouts to `build/` from the chip layout. |
+| [`make_models.py`](make_models.py) | Writes the openEMS model layouts to `build/` from the chip layout, with the ground ring cut and closed. |
 | [`run_openems.py`](run_openems.py) | Runs one openEMS model and writes its S-parameters and derived values. |
 | [`tb_mim.spice.in`](tb_mim.spice.in), [`run_mim.py`](run_mim.py) | ngspice testbench of the PDK MIM model and its driver. |
 | [`dc_resistance.py`](dc_resistance.py), [`dc_inductance.py`](dc_inductance.py) | DC resistance and free-space inductance. |
@@ -91,7 +91,8 @@ From the repository root:
    ln -s "$(readlink -f ../gf180mcu/gf180mcuD)" docs/sim/pdk
    ```
 
-2. Unzip the chip layout and write the model layouts:
+2. Unzip the chip layout and write the model layouts. Each inductor cell is
+   written twice, with the ground ring cut and, as `<name>_closed`, closed:
 
    ```sh
    unzip -o RLCMV4_filled.zip -d build
@@ -237,20 +238,20 @@ and below.
 ### Closed ground ring
 
 On the chip, the Metal5 ring of each inductor cell is open only where the
-terminals pass through it. A first set of chip models closed it with the bar
-without a cut on the opposite side, which formed a closed loop around the
-winding. That loop lowered the openEMS inductance at 0.2 GHz as follows:
+terminals pass through it. [`make_models.py`](make_models.py) also writes each
+chip cell with the bar but without the cut on the opposite side, which forms a
+closed loop around the winding. That loop lowers the openEMS inductance at
+0.2 GHz as follows:
 
 | Structure | Ring cut | Ring closed | Change |
 |---|---|---|---|
-| Two-turn spiral [10] | 1.065 nH | 0.927 nH | −13 % |
-| Four-turn spiral [8] | 1.646 nH | 1.499 nH | −9 % |
-| Symmetric inductor [9] | 1.122 nH | 0.936 nH | −17 % |
+| Two-turn spiral [10] | 1.065 nH | [0.927 nH](results/spiral_2turn_closed.csv) | −13 % |
+| Four-turn spiral [8] | 1.646 nH | [1.499 nH](results/spiral_4turn_closed.csv) | −9 % |
+| Symmetric inductor [9] | 1.122 nH | [0.936 nH](results/symmetric_closed.csv) | −17 % |
 
 On the chip the ring is joined to the launch ground on both sides of the
 terminals, so a measurement may see part of this effect. The simulated models
-do not contain the launches, and the results above with the ring closed are
-not kept in [`results/`](results).
+do not contain the launches.
 
 ## The openEMS workflow
 

@@ -1,5 +1,6 @@
 # /// script
-# dependencies = ["klayout"]
+# requires-python = ">=3.10"
+# dependencies = ["klayout==0.30.12"]
 # ///
 """Write the openEMS model layouts for the RLCM capacitors and inductors.
 
@@ -20,7 +21,8 @@ Inductors
     open only where the terminals pass through it, so the bar would close it
     into a loop around the winding. The ring is therefore cut, 6 um wide, on
     the side opposite the terminals, which is where the stand-alone file has
-    its cut.
+    its cut. A second model, <name>_closed, leaves the ring closed, to show
+    how much the loop changes the result.
 
 Capacitors
     A clip of the chip around the capacitor and the parallel parts of its two
@@ -73,20 +75,27 @@ def write(layout, name):
     print("%s: bbox %s um, shapes per layer %s" % (path.relative_to(ROOT), cell.dbbox(), dict(sorted(counts.items()))))
 
 
+# The inductor cells are centred on the origin and 298 um square. Their Metal5
+# ground ring runs from 135 um to 149 um from the centre and the winding stays
+# within 125 um. The bar ends at the outer edge of the ring, and the cut runs
+# from between the winding and the ring to beyond the cell edge.
+EDGE, BAR_END, CUT_START = 150, 149, 128
+
+
 def ground_bar(ports):
-    """Metal5 bar from 1 um beyond the port markers to the cell edge, 3 um wider than the markers on each side."""
+    """Metal5 bar from 1 um beyond the port markers to the ring, 3 um wider than the markers on each side."""
     box = ports.bbox()
     if box.width() < box.height():  # markers stacked vertically: terminals point along +x
-        return um(box.right / 1000, box.bottom / 1000 - 3, 149, box.top / 1000 + 3)
-    return um(box.left / 1000 - 3, -149, box.right / 1000 + 3, box.bottom / 1000)  # terminals point along -y
+        return um(box.right / 1000, box.bottom / 1000 - 3, BAR_END, box.top / 1000 + 3)
+    return um(box.left / 1000 - 3, -BAR_END, box.right / 1000 + 3, box.bottom / 1000)  # terminals point along -y
 
 
 def ring_cut(ports):
     """6 um cut through the ground ring on the side opposite the terminals."""
     box = ports.bbox()
     if box.width() < box.height():  # terminals point along +x
-        return um(-150, -3, -128, 3)
-    return um(-3, 128, 3, 150)  # terminals point along -y
+        return um(-EDGE, -3, -CUT_START, 3)
+    return um(-3, CUT_START, 3, EDGE)  # terminals point along -y
 
 
 def main():
@@ -94,20 +103,21 @@ def main():
     chip.read(str(CHIP))
     for name, (cellname, port_layers) in INDUCTORS.items():
         src = chip.cell(cellname)
-        layout, model = new_model()
-        ports = kdb.Region()
-        for layer in port_layers:
-            region = kdb.Region(src.begin_shapes_rec(chip.find_layer(layer, 0)))
-            model.shapes(layout.layer(layer, 0)).insert(region)
-            ports += region
-        cut = kdb.Region(ring_cut(ports))
-        for layer in DRAWN:
-            li = chip.find_layer(layer, 0)
-            if li is not None:
-                shapes = kdb.Region(src.begin_shapes_rec(li)).merged() - cut
-                model.shapes(layout.layer(layer, 0)).insert(shapes)
-        model.shapes(layout.layer(METAL5, 0)).insert(ground_bar(ports))
-        write(layout, name)
+        for suffix, cut_ring in (("", True), ("_closed", False)):
+            layout, model = new_model()
+            ports = kdb.Region()
+            for layer in port_layers:
+                region = kdb.Region(src.begin_shapes_rec(chip.find_layer(layer, 0)))
+                model.shapes(layout.layer(layer, 0)).insert(region)
+                ports += region
+            cut = kdb.Region(ring_cut(ports)) if cut_ring else kdb.Region()
+            for layer in DRAWN:
+                li = chip.find_layer(layer, 0)
+                if li is not None:
+                    shapes = kdb.Region(src.begin_shapes_rec(li)).merged() - cut
+                    model.shapes(layout.layer(layer, 0)).insert(shapes)
+            model.shapes(layout.layer(METAL5, 0)).insert(ground_bar(ports))
+            write(layout, name + suffix)
 
     top = chip.cell("RLCMV4_filled")
     for name, (clip, port) in CAPACITORS.items():
